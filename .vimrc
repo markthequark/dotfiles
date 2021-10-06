@@ -7,6 +7,10 @@ call plug#begin()
   Plug 'ntpeters/vim-better-whitespace' " highlight whitespace in red
   Plug 'airblade/vim-gitgutter' " git info left on line numbers
   Plug 'slashmili/alchemist.vim' " elixir completion, doc lookup, jump to def, mix & iex integreation
+  Plug 'preservim/nerdtree' " filesystem tree in sidebar
+  Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+  Plug 'junegunn/fzf.vim' " fuzzy search - requires both of these packages, this is the intended install method
+  Plug 'LunarWatcher/auto-pairs' " Insert or delete brackets, parens, and quotes in pairs
 call plug#end()
 
 " Enables line numbering
@@ -48,4 +52,12 @@ nnoremap <C-S-down> :.move +1<CR>
 " Bubble lines up and down in visual mode
 vnoremap <C-S-up> :'<,'>move '<-2 \| normal! gv<CR>
 vnoremap <C-S-down> :'<,'>move '>+1 \| normal! gv<CR>
+
+" FORMATTERS
+au FileType javascript setlocal formatprg=prettier
+au FileType javascript.jsx setlocal formatprg=prettier
+au FileType typescript setlocal formatprg=prettier\ --parser\ typescript
+au FileType html setlocal formatprg=js-beautify\ --type\ html
+au FileType scss setlocal formatprg=prettier\ --parser\ css
+au FileType css setlocal formatprg=prettier\ --parser\ css
 
