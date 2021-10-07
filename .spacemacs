@@ -38,22 +38,33 @@ This function should only modify configuration layer settings."
      ;; Uncomment some layer names and press `SPC f e R' (Vim style) or
      ;; `M-m f e R' (Emacs style) to install them.
      ;; ----------------------------------------------------------------
-     ;; auto-completion
+     (auto-completion :variables
+                      auto-completion-enable-snippets-in-popup t)
      ;; better-defaults
      emacs-lisp
      ;; git
      helm
-     ;; lsp
+     lsp
      ;; markdown
      multiple-cursors
-     ;; org
+     org
      ;; (shell :variables
      ;;        shell-default-height 30
      ;;        shell-default-position 'bottom)
-     ;; spell-checking
-     ;; syntax-checking
+     spell-checking
+     syntax-checking
      ;; version-control
-     treemacs)
+     treemacs
+     html
+     (typescript :variables
+                 javascript-backend 'tide
+                 typescript-fmt-tool 'prettier
+                 typescript-linter 'eslint)
+     (javascript :variables
+                 javascript-backend 'tide
+                 javascript-fmt-tool 'prettier
+                 node-add-modules-path t
+                 javascript-fmt-on-save t))
 
 
    ;; List of additional packages that will be installed without being wrapped
@@ -64,7 +75,11 @@ This function should only modify configuration layer settings."
    ;; `dotspacemacs/user-config'. To use a local version of a package, use the
    ;; `:location' property: '(your-package :location "~/path/to/your-package/")
    ;; Also include the dependencies as they will not be resolved automatically.
-   dotspacemacs-additional-packages '()
+   dotspacemacs-additional-packages
+   '(
+     rjsx-mode
+     yasnippet-snippets
+     prettier-js)
 
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
@@ -241,7 +256,7 @@ It should only modify the values of Spacemacs settings."
    ;; a non-negative integer (pixel size), or a floating-point (point size).
    ;; Point size is recommended, because it's device independent. (default 10.0)
    dotspacemacs-default-font '("Source Code Pro"
-                               :size 10.0
+                               :size 18.0
                                :weight normal
                                :width normal)
 
@@ -344,7 +359,7 @@ It should only modify the values of Spacemacs settings."
    ;; If non-nil the frame is maximized when Emacs starts up.
    ;; Takes effect only if `dotspacemacs-fullscreen-at-startup' is nil.
    ;; (default nil) (Emacs 24.4+ only)
-   dotspacemacs-maximized-at-startup nil
+   dotspacemacs-maximized-at-startup t
 
    ;; If non-nil the frame is undecorated when Emacs starts up. Combine this
    ;; variable with `dotspacemacs-maximized-at-startup' in OSX to obtain
@@ -385,8 +400,8 @@ It should only modify the values of Spacemacs settings."
    ;; If set to `t', `relative' or `visual' then line numbers are enabled in all
    ;; `prog-mode' and `text-mode' derivatives. If set to `relative', line
    ;; numbers are relative. If set to `visual', line numbers are also relative,
-   ;; but lines are only visual lines are counted. For example, folded lines
-   ;; will not be counted and wrapped lines are counted as multiple lines.
+   ;; but only visual lines are counted. For example, folded lines will not be
+   ;; counted and wrapped lines are counted as multiple lines.
    ;; This variable can also be set to a property list for finer control:
    ;; '(:relative nil
    ;;   :visual nil
@@ -480,14 +495,14 @@ It should only modify the values of Spacemacs settings."
    ;; (default nil)
    dotspacemacs-whitespace-cleanup nil
 
-   ;; If non nil activate `clean-aindent-mode' which tries to correct
-   ;; virtual indentation of simple modes. This can interfer with mode specific
+   ;; If non-nil activate `clean-aindent-mode' which tries to correct
+   ;; virtual indentation of simple modes. This can interfere with mode specific
    ;; indent handling like has been reported for `go-mode'.
    ;; If it does deactivate it here.
    ;; (default t)
    dotspacemacs-use-clean-aindent-mode t
 
-   ;; Accept SPC as y for prompts if non nil. (default nil)
+   ;; Accept SPC as y for prompts if non-nil. (default nil)
    dotspacemacs-use-SPC-as-y nil
 
    ;; If non-nil shift your number row to match the entered keyboard layout
@@ -507,7 +522,7 @@ It should only modify the values of Spacemacs settings."
    dotspacemacs-pretty-docs nil
 
    ;; If nil the home buffer shows the full path of agenda items
-   ;; and todos. If non nil only the file name is shown.
+   ;; and todos. If non-nil only the file name is shown.
    dotspacemacs-home-shorten-agenda-source nil
 
    ;; If non-nil then byte-compile some of Spacemacs files.
@@ -541,8 +556,70 @@ dump.")
 This function is called at the very end of Spacemacs startup, after layer
 configuration.
 Put your configuration code here, except for variables that should be set
-before packages are loaded.")
+before packages are loaded."
+  (defun tide-setup-hook ()
+    (tide-setup)
+    (eldoc-mode)
+    (tide-hl-identifier-mode +1)
+    (setq web-mode-enable-auto-quoting nil)
+    (setq web-mode-markup-indent-offset 2)
+    (setq web-mode-code-indent-offset 2)
+    (setq web-mode-attr-indent-offset 2)
+    (setq web-mode-attr-value-indent-offset 2)
+    (setq lsp-eslint-server-command '("node" (concat (getenv "HOME") "/var/src/vscode-eslint/server/out/eslintServer.js") "--stdio"))
+    (set (make-local-variable 'company-backends)
+         '((company-tide company-files :with company-yasnippet)
+           (company-dabbrev-code company-dabbrev))))
+
+  ;; hooks
+  (add-hook 'before-save-hook 'tide-format-before-save)
+
+  ;; use rjsx-mode for .js* files except json and use tide with rjsx
+  (add-to-list 'auto-mode-alist '("\\.js.*$" . rjsx-mode))
+  (add-to-list 'auto-mode-alist '("\\.json$" . json-mode))
+  (add-hook 'rjsx-mode-hook 'tide-setup-hook)
+
+  ;; flycheck
+  (global-flycheck-mode)
+  (add-hook 'after-init-hook #'global-flycheck-mode)
+
+  ;; web-mode extra config
+  (add-hook 'web-mode-hook 'tide-setup-hook
+            (lambda () (pcase (file-name-extension buffer-file-name)
+                         ("tsx" ('tide-setup-hook))
+                         (_ (my-web-mode-hook)))))
+  (flycheck-add-mode 'typescript-tslint 'web-mode)
+  (add-hook 'web-mode-hook 'company-mode)
+  (add-hook 'web-mode-hook 'prettier-js-mode)
+  (add-hook 'web-mode-hook #'turn-on-smartparens-mode t)
+
+  ;; yasnippet
+  (add-to-list 'yas-snippet-dirs "~/.emacs.d/layers/+completion/auto-completion/local/snippets/")
+  (yas-global-mode 1)
+
+  ;; company-mode
+  (global-company-mode))
 
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
+(defun dotspacemacs/emacs-custom-settings ()
+  "Emacs custom settings.
+This is an auto-generated function, do not modify its content directly, use
+Emacs customize menu instead.
+This function is called at the very end of Spacemacs initialization."
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(evil-want-Y-yank-to-eol nil)
+ '(package-selected-packages
+   '(yasnippet-snippets web-mode web-beautify tide typescript-mode tagedit slim-mode scss-mode sass-mode rjsx-mode pug-mode prettier-js org-rich-yank org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download org-contrib org org-cliplink npm-mode nodejs-repl livid-mode skewer-mode json-navigator hierarchy json-mode json-snatcher json-reformat js2-refactor multiple-cursors js2-mode js-doc impatient-mode simple-httpd htmlize helm-org-rifle helm-css-scss helm-company helm-c-yasnippet haml-mode gnuplot fuzzy flyspell-correct-helm flyspell-correct flycheck-pos-tip pos-tip evil-org emmet-mode company-web web-completion-data company auto-yasnippet yasnippet auto-dictionary add-node-modules-path ac-ispell auto-complete ws-butler writeroom-mode winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package undo-tree treemacs-projectile treemacs-persp treemacs-icons-dired treemacs-evil toc-org symon symbol-overlay string-inflection string-edit spaceline-all-the-icons restart-emacs request rainbow-delimiters quickrun popwin pcre2el password-generator paradox overseer org-superstar open-junk-file nameless multi-line macrostep lorem-ipsum link-hint inspector info+ indent-guide hybrid-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation helm-xref helm-themes helm-swoop helm-purpose helm-projectile helm-org helm-mode-manager helm-make helm-ls-git helm-flx helm-descbinds helm-ag google-translate golden-ratio font-lock+ flycheck-package flycheck-elsa flx-ido fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-easymotion evil-collection evil-cleverparens evil-args evil-anzu eval-sexp-fu emr elisp-slime-nav editorconfig dumb-jump drag-stuff dotenv-mode dired-quick-sort diminish define-word column-enforce-mode clean-aindent-mode centered-cursor-mode auto-highlight-symbol auto-compile aggressive-indent ace-link ace-jump-helm-line)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+)
