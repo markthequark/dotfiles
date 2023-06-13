@@ -2,11 +2,8 @@ call plug#begin()
   Plug 'tpope/vim-sensible' " minimal niceties
   Plug 'itchyny/lightline.vim' " status bar
   Plug 'sheerun/vim-polyglot' " syntax highlighting for 120+ languages, on-demand loading
-  Plug 'ycm-core/YouCompleteMe' " autocomplete
-  Plug 'preservim/nerdcommenter' " toggle/invert comments with ,ci
   Plug 'ntpeters/vim-better-whitespace' " highlight whitespace in red
   Plug 'airblade/vim-gitgutter' " git info left on line numbers
-  Plug 'slashmili/alchemist.vim' " elixir completion, doc lookup, jump to def, mix & iex integreation
   Plug 'preservim/nerdtree' " filesystem tree in sidebar
   Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
   Plug 'junegunn/fzf.vim' " fuzzy search - requires both of these packages, this is the intended install method
@@ -32,10 +29,6 @@ set showcmd
 " set leader key to something normal, default is \
 let mapleader = ","
 
-" Add spaces after comment delimiters by default
-let g:NERDSpaceDelims = 1
-" YouCompleteMe settings
-let g:ycm_min_num_of_chars_for_completion = 1
 " GitGutter settings
 set signcolumn=number
 let g:gitgutter_override_sign_column_highlight = 0
