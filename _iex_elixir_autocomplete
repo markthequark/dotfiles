@@ -34,6 +34,5 @@ _elixir()
   fi
 }
 
-complete -F _mix mix
 complete -F _elixir elixir
 complete -F _iex iex
