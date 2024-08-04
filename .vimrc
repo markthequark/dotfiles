@@ -54,3 +54,5 @@ au FileType html setlocal formatprg=js-beautify\ --type\ html
 au FileType scss setlocal formatprg=prettier\ --parser\ css
 au FileType css setlocal formatprg=prettier\ --parser\ css
 
+" Set File Type
+autocmd BufRead,BufNewFile ~/.ssh/config.d/* set filetype=sshconfig
