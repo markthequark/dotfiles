@@ -40,11 +40,8 @@ highlight GitGutterChangeDelete ctermfg=4
 
 """ key rebinds
 " Bubble single lines up and down
-nnoremap <C-S-up> :.move -2<CR>
-nnoremap <C-S-down> :.move +1<CR>
-" Bubble lines up and down in visual mode
-vnoremap <C-S-up> :'<,'>move '<-2 \| normal! gv<CR>
-vnoremap <C-S-down> :'<,'>move '>+1 \| normal! gv<CR>
+nnoremap <A-up> :.move -2<CR>
+nnoremap <A-down> :.move +1<CR>
 
 " FORMATTERS
 au FileType javascript setlocal formatprg=prettier
