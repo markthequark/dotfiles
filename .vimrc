@@ -54,3 +54,4 @@ au FileType css setlocal formatprg=prettier\ --parser\ css
 " Set File Type
 autocmd BufRead,BufNewFile ~/.ssh/config.d/* set filetype=sshconfig
 autocmd BufRead,BufNewFile *.ttslua set filetype=lua
+set novisualbell
